@@ -42,4 +42,16 @@ export class S3ObjectsService {
 
     return s3Object;
   }
+
+  async updateObjectById(s3Object: S3Object, file: Express.Multer.File) {
+    Object.assign(s3Object, { fileId: file.filename });
+
+    const updatedS3Object = await this.s3ObjectRepository.save(s3Object);
+
+    return updatedS3Object;
+  }
+
+  async deleteObjectById(id: number) {
+    return this.s3ObjectRepository.delete({ id });
+  }
 }

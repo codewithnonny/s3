@@ -13,6 +13,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Response,
+  Put,
 } from '@nestjs/common';
 import { S3ObjectsService } from './s3_objects.service';
 import { CreateS3ObjectDto } from './dto/create-s3_object.dto';
@@ -90,5 +91,31 @@ export class S3ObjectsController {
     await this.authorizeUserBucket(userFromRequest, s3Object.bucket.id);
 
     return res.sendFile(s3Object.fileId, { root: './src/upload' });
+  }
+
+  @Put(':id')
+  @UseInterceptors(FileInterceptor('file', multerOptions))
+  async updateObjectById(
+    @Param('id', ParseIntPipe) id: number,
+    @User() userFromRequest: UserFromRequest,
+    @UploadedFile('file') file: Express.Multer.File,
+  ) {
+    const s3Object = await this.s3ObjectsService.getS3ObjectById(id);
+
+    await this.authorizeUserBucket(userFromRequest, s3Object.bucket.id);
+
+    return this.s3ObjectsService.updateObjectById(s3Object, file);
+  }
+
+  @Delete(':id')
+  async deleteObjectById(
+    @Param('id', ParseIntPipe) id: number,
+    @User() userFromRequest: UserFromRequest,
+  ) {
+    const s3Object = await this.s3ObjectsService.getS3ObjectById(id);
+
+    await this.authorizeUserBucket(userFromRequest, s3Object.bucket.id);
+
+    return this.s3ObjectsService.deleteObjectById(id)
   }
 }
